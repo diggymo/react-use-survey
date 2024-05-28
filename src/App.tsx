@@ -16,14 +16,19 @@ const fetchMyName: () => Promise<string> = () => {
 
   return cachedPromise;
 };
+
 const App = () => {
   console.log("RENDERING!");
-
-  const myName = useCustom(fetchMyName());
+  // const myName = useCustom(fetchMyName());
+  const myName = useCustom2(fetchMyName());
 
   console.log("DATA FETCHED!");
 
-  return <p>{myName}</p>;
+  return (
+    <div>
+      <p>{myName}</p>
+    </div>
+  );
 };
 
 export const AppContainer = () => {
@@ -34,52 +39,6 @@ export const AppContainer = () => {
       </Suspense>
     </ErrorBoundary>
   );
-};
-
-let cache: Promise<unknown> | null = null;
-let resolvedValue:
-  | {
-      status: "fullfiled";
-      value: unknown;
-    }
-  | {
-      status: "rejected";
-      error: unknown;
-    }
-  | null = null;
-
-const useCustom = <T,>(promise: Promise<T>): T => {
-  const [, setKey] = useState(0);
-  const onForceUpdate = () => {
-    setKey((key) => key + 1);
-  };
-
-  const isCached = cache !== null;
-  console.log({ isResolved: resolvedValue !== null, isCached });
-  if (isCached) {
-    if (resolvedValue === null) throw cache;
-    if (resolvedValue.status === "fullfiled") {
-      return resolvedValue.value as T;
-    }
-    if (resolvedValue !== null && resolvedValue.status === "rejected") {
-      throw resolvedValue.error;
-    }
-
-    console.warn("不明なステータス", resolvedValue);
-  }
-
-  promise
-    .then((v) => {
-      resolvedValue = { status: "fullfiled", value: v };
-      onForceUpdate();
-    })
-    .catch((error) => {
-      resolvedValue = { status: "rejected", error };
-      onForceUpdate();
-    });
-
-  cache = promise;
-  throw promise;
 };
 
 const useCustom2 = <T,>(promise: Promise<T>): T => {
@@ -122,14 +81,4 @@ const useCustom2 = <T,>(promise: Promise<T>): T => {
 
   setSavedPromise(promise);
   throw promise;
-};
-
-const registerUser = (email: string) => {
-  fetchUserData(email);
-};
-
-const fetchUserData = (email: string) => {
-  axios.get("/users", {
-    email,
-  });
 };
